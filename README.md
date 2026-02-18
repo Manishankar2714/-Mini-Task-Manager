@@ -10,7 +10,6 @@ A professional, minimalist Task Management application built with FastAPI (Pytho
 - Persistent Storage: Uses SQLAlchemy with SQLite to save tasks locally.
 - Modular Backend: Clean separation of concerns between models, routes, and database logic.
 - Modern UI:
-  - Glassmorphism-inspired design.
   - Filtering (All, Pending, Completed).
   - Real-time toast notifications for user feedback.
   - Smooth micro-animations and transitions.
