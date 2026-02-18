@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mini Task Manager</title>
+    <meta name="description"
+        content="A sleek, modern, and efficient task management application built with vanilla web technologies.">
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="background-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <main class="app-container">
+        <header class="app-header">
+            <h1>Mini Task Manager</h1>
+
+        </header>
+
+        <section class="input-section">
+            <div class="input-group">
+                <input type="text" id="taskInput" placeholder="What needs to be done?"
+                    aria-label="New task description">
+                <button id="addTaskBtn" class="btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    <span>Add Task</span>
+                </button>
+            </div>
+        </section>
+
+        <nav class="filter-nav">
+            <button class="filter-btn active" data-filter="all">All</button>
+            <button class="filter-btn" data-filter="pending">Pending</button>
+            <button class="filter-btn" data-filter="completed">Completed</button>
+        </nav>
+
+        <section class="tasks-section">
+            <ul id="taskList" class="task-list">
+                <!-- Tasks will be injected here -->
+            </ul>
+            <div id="emptyState" class="empty-state">
+                <div class="empty-icon">✨</div>
+                <p>No tasks yet. Start by adding one above!</p>
+            </div>
+        </section>
+
+        <footer class="app-footer">
+            <div class="stats">
+                <span id="pendingCount">0 items left</span>
+            </div>
+            <button id="clearCompletedBtn" class="btn-text">Clear Completed</button>
+        </footer>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
