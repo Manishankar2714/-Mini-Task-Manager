@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentFilter = 'all';
     let allTasks = [];
     let isSubmitting = false;
+    let editingTaskId = null;
 
     /**
      * UI: Show Toast Notification
@@ -121,6 +122,35 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
+     * API: Update task title
+     */
+    async function saveTask(id, newTitle) {
+        const title = newTitle.trim();
+        if (!title) {
+            showNotification('Task title cannot be empty', 'warning');
+            render(); // Reset to original state
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_URL}/tasks/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title })
+            });
+
+            if (response.ok) {
+                editingTaskId = null;
+                await fetchTasks();
+                render();
+                showNotification('Task updated', 'success');
+            }
+        } catch (error) {
+            showNotification('Failed to update task', 'error');
+        }
+    }
+
+    /**
      * API: Delete single task
      */
     async function deleteTask(id) {
@@ -155,6 +185,27 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
+     * UI: Start editing a task
+     */
+    function startEditing(id) {
+        editingTaskId = id;
+        render();
+        const input = document.getElementById(`edit-input-${id}`);
+        if (input) {
+            input.focus();
+            input.setSelectionRange(input.value.length, input.value.length);
+        }
+    }
+
+    /**
+     * UI: Cancel editing
+     */
+    function cancelEditing() {
+        editingTaskId = null;
+        render();
+    }
+
+    /**
      * UI: Render tasks and update stats
      */
     function render() {
@@ -165,19 +216,51 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // Update list
-        elements.taskList.innerHTML = filtered.map(task => `
-            <li class="task-item ${task.status === 'completed' ? 'completed' : ''}">
-                <div class="task-checkbox ${task.status === 'completed' ? 'completed' : ''}" 
-                     onclick="toggleTask(${task.id})"></div>
-                <span class="task-text">${escapeHtml(task.title)}</span>
-                <button class="btn-delete" onclick="deleteTask(${task.id})" aria-label="Delete task">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="3 6 5 6 21 6"></polyline>
-                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                    </svg>
-                </button>
-            </li>
-        `).join('');
+        elements.taskList.innerHTML = filtered.map(task => {
+            const isEditing = task.id === editingTaskId;
+
+            return `
+                <li class="task-item ${task.status === 'completed' ? 'completed' : ''} ${isEditing ? 'is-editing' : ''}">
+                    <div class="task-checkbox ${task.status === 'completed' ? 'completed' : ''}" 
+                         onclick="${isEditing ? '' : `toggleTask(${task.id})`}"></div>
+                    
+                    ${isEditing ? `
+                        <input type="text" class="edit-input" id="edit-input-${task.id}" 
+                               value="${escapeHtml(task.title)}" 
+                               onkeydown="if(event.key === 'Enter') saveTask(${task.id}, this.value); if(event.key === 'Escape') cancelEditing();">
+                        <div class="edit-actions">
+                            <button class="btn-save" onclick="saveTask(${task.id}, document.getElementById('edit-input-${task.id}').value)" aria-label="Save">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                            </button>
+                            <button class="btn-cancel" onclick="cancelEditing()" aria-label="Cancel">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                            </button>
+                        </div>
+                    ` : `
+                        <span class="task-text">${escapeHtml(task.title)}</span>
+                        <div class="task-actions">
+                            <button class="btn-edit" onclick="startEditing(${task.id})" aria-label="Edit task">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                </svg>
+                            </button>
+                            <button class="btn-delete" onclick="deleteTask(${task.id})" aria-label="Delete task">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    `}
+                </li>
+            `;
+        }).join('');
 
         // Handle empty state
         const hasTasks = allTasks.length > 0;
@@ -217,6 +300,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Globals for inline events
     window.toggleTask = toggleTask;
     window.deleteTask = deleteTask;
+    window.startEditing = startEditing;
+    window.cancelEditing = cancelEditing;
+    window.saveTask = saveTask;
 
     init();
 });
